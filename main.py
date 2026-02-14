@@ -6,8 +6,25 @@ from analyzer.cefr import CEFRAnalyzer
 from analyzer.pdf_writer import PDFWriter
 from analyzer.definitions import DefinitionFetcher
 
-def main(input_pdf, output_pdf):
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser(description="Analyze vocabulary in a PDF based on CEFR levels.")
+    parser.add_argument("input_pdf", help="Path to input PDF file")
+    parser.add_argument("output_pdf", help="Path to output PDF file")
+    parser.add_argument("--levels", nargs="+", 
+                        default=["A1", "A2", "B1", "B2", "C1", "C2"],
+                        choices=["A1", "A2", "B1", "B2", "C1", "C2"],
+                        help="CEFR levels to highlight and include (default: all)")
+    
+    args = parser.parse_args()
+    
+    input_pdf = args.input_pdf
+    output_pdf = args.output_pdf
+    target_levels = set([l.upper() for l in args.levels])
+    
     print(f"Processing {input_pdf}...")
+    print(f"Target levels: {', '.join(sorted(target_levels))}")
     
     # Initialize components
     extractor = PDFExtractor(input_pdf)
@@ -21,64 +38,52 @@ def main(input_pdf, output_pdf):
     glossary_entries = {}
     level_counts = {}
 
-    # Process each page
-    for page_num, page in enumerate(extractor.get_document()):
-        # Get words with coordinates
-        pdf_words = page.get_text("words") 
-        # pdf_words structure: (x0, y0, x1, y1, "word", block_no, line_no, word_no)
-        
-        # Reconstruct text for NLP (preserving order)
-        text_content = " ".join([w[4] for w in pdf_words])
-        
-        # NLP Processing
-        # We need to map spaCy tokens back to pdf_words
-        # This is an approximation: we assume sequential order matches
-        # and we strip punctuation for matching if needed.
-        
-        # A better heuristic for alignment:
-        # Track character position in text_content
-        
-        nlp_results = nlp_engine.process_text(text_content)
-        
-        # Alignment logic
-        # We will iterate through pdf_words and try to find the corresponding nlp result
-        # This is simplified. 
-        
-        # Let's try matching by simple iteration since we built text from words
-        # But spaCy might split words differently or group them.
-        # Fallback: simple word-by-word lookup if alignment fails or just iterate pdf_words
-        
-        # Simple word-by-word approach for v1 (Contextless lemmatization fallback)
-        for w in pdf_words:
-            rect = w[:4]
-            text = w[4]
+    try:
+        # Process each page
+        for page_num, page in enumerate(extractor.get_document()):
+            # Get words with coordinates
+            pdf_words = page.get_text("words") 
+            # pdf_words structure: (x0, y0, x1, y1, "word", block_no, line_no, word_no)
             
-            # Simple clean
-            clean_text = "".join(ch for ch in text if ch.isalpha())
-            if not clean_text:
-                continue
+            # Reconstruct text for NLP (preserving order)
+            text_content = " ".join([w[4] for w in pdf_words])
+            
+            nlp_results = nlp_engine.process_text(text_content)
+            
+            # Simple word-by-word approach for v1 (Contextless lemmatization fallback)
+            for w in pdf_words:
+                rect = w[:4]
+                text = w[4]
                 
-            # Quick lookup (context-free for now for robust highlighting)
-            # In a real pipeline, we'd map the NLP tokens to these rects
-            lemma = nlp_engine.nlp(clean_text)[0].lemma_
-            level = cefr_analyzer.get_level(lemma)
-            
-            if level:
-                color = cefr_analyzer.get_color_for_level(level)
-                if color:
-                    words_to_highlight.append({
-                        "page": page_num,
-                        "rect": rect,
-                        "color": color
-                    })
+                # Simple clean
+                clean_text = "".join(ch for ch in text if ch.isalpha())
+                if not clean_text:
+                    continue
                     
-                # Collect stats
-                level_counts[level] = level_counts.get(level, 0) + 1
+                # Quick lookup (context-free for now for robust highlighting)
+                lemma = nlp_engine.nlp(clean_text)[0].lemma_
+                level = cefr_analyzer.get_level(lemma)
                 
-                # Collect glossary (only for B2 and above)
-                if level in ["B2", "C1", "C2"]:
-                     if lemma not in glossary_entries:
-                         # Placeholder definition
+                # Check if level is identified AND it is in the target list
+                if level and level in target_levels:
+                    color = cefr_analyzer.get_color_for_level(level)
+                    if color:
+                        words_to_highlight.append({
+                            "page": page_num,
+                            "rect": rect,
+                            "color": color
+                        })
+                        
+                    # Collect stats
+                    level_counts[level] = level_counts.get(level, 0) + 1
+                    
+                    # Collect glossary (only for B2 and above, or strictly what requested?)
+                    # User said "also be added in extra pages" implying the filter applies there too.
+                    # Let's align glossary with target levels.
+                    # Typically glossary is for harder words, but if user asks for A1, maybe they want A1 glossary?
+                    # Let's include everything requested in glossary to be safe/flexible.
+                    
+                    if lemma not in glossary_entries:
                          glossary_entries[lemma] = {
                              "word": lemma,
                              "level": level,
@@ -86,38 +91,41 @@ def main(input_pdf, output_pdf):
                              "definition": def_fetcher.get_definition(lemma) or f"Definition not found for {lemma}"
                          }
 
-    print(f"Found {len(words_to_highlight)} words to highlight.")
-    
-    # 1. Highlight
-    writer.highlight_words(words_to_highlight)
-    
-    # 2. Generate attachments
-    attachments = []
-    
-    if glossary_entries:
-        print("Generating glossary...")
-        glossary_list = sorted(glossary_entries.values(), key=lambda x: x['word'])
-        glossary_path = writer.generate_glossary(glossary_list, "glossary_temp.pdf")
-        attachments.append(glossary_path)
+        print(f"Found {len(words_to_highlight)} words to highlight from levels {target_levels}.")
         
-    if level_counts:
-        print("Generating stats...")
-        stats_path = writer.generate_stats_page(level_counts, "stats_temp.pdf")
-        attachments.append(stats_path)
+        # 1. Highlight
+        writer.highlight_words(words_to_highlight)
         
-    # 3. Merge
-    print(f"Saving to {output_pdf}...")
-    writer.merge_pdfs(input_pdf, attachments, output_pdf)
-    
-    # Cleanup
-    for p in attachments:
-        if os.path.exists(p):
-            os.remove(p)
+        # 2. Generate attachments
+        attachments = []
+        
+        if glossary_entries:
+            print(f"Generating glossary with {len(glossary_entries)} entries...")
+            glossary_list = sorted(glossary_entries.values(), key=lambda x: x['word'])
+            glossary_path = writer.generate_glossary(glossary_list, "glossary_temp.pdf")
+            attachments.append(glossary_path)
+        else:
+            print("No glossary entries generated (maybe no words matches the selected levels).")
             
-    print("Done!")
+        if level_counts:
+            print("Generating stats...")
+            stats_path = writer.generate_stats_page(level_counts, "stats_temp.pdf")
+            attachments.append(stats_path)
+            
+        # 3. Merge
+        print(f"Saving to {output_pdf}...")
+        writer.merge_pdfs(input_pdf, attachments, output_pdf)
+        
+        # Cleanup
+        for p in attachments:
+            if os.path.exists(p):
+                os.remove(p)
+                
+        print("Done!")
+
+    finally:
+        # Ensure we close the doc if something crashes, though PyMuPDF is robust
+        pass
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python main.py <input_pdf> <output_pdf>")
-    else:
-        main(sys.argv[1], sys.argv[2])
+    main()
