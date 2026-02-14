@@ -17,12 +17,14 @@ class CEFRAnalyzer:
             with open(path, 'r') as f:
                 self.word_levels = json.load(f)
 
-    def get_level(self, word):
-        """Returns the CEFR level of a word (lemma). Defaults to frequency estimation if not found."""
+    def get_level(self, word, estimate=True):
+        """Returns the CEFR level of a word (lemma). Defaults to frequency estimation if not found and estimate=True."""
         level = self.word_levels.get(word.lower())
         if level:
             return level
-        return self.estimate_level(word)
+        if estimate:
+            return self.estimate_level(word)
+        return None
 
     def estimate_level(self, word):
         """Estimates CEFR level based on word frequency (Zipf scale)."""

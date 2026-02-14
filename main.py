@@ -18,6 +18,8 @@ def main():
                         help="CEFR levels to highlight and include (default: all)")
     parser.add_argument("--include-definitions", action="store_true",
                         help="Fetch and include definitions in the glossary")
+    parser.add_argument("--estimate", action="store_true",
+                        help="Enable frequency-based CEFR estimation for unknown words")
     
     args = parser.parse_args()
     
@@ -63,8 +65,11 @@ def main():
                     continue
                     
                 # Quick lookup (context-free for now for robust highlighting)
+                # In a real pipeline, we'd map the NLP tokens to these rects
                 lemma = nlp_engine.nlp(clean_text)[0].lemma_
-                level = cefr_analyzer.get_level(lemma)
+                
+                # Pass check_frequency based on flag
+                level = cefr_analyzer.get_level(lemma, estimate=args.estimate)
                 
                 # Check if level is identified AND it is in the target list
                 if level and level in target_levels:
