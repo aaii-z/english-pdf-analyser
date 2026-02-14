@@ -16,6 +16,8 @@ def main():
                         default=["A1", "A2", "B1", "B2", "C1", "C2"],
                         choices=["A1", "A2", "B1", "B2", "C1", "C2"],
                         help="CEFR levels to highlight and include (default: all)")
+    parser.add_argument("--include-definitions", action="store_true",
+                        help="Fetch and include definitions in the glossary")
     
     args = parser.parse_args()
     
@@ -84,12 +86,16 @@ def main():
                     # Let's include everything requested in glossary to be safe/flexible.
                     
                     if lemma not in glossary_entries:
-                         glossary_entries[lemma] = {
+                         entry = {
                              "word": lemma,
                              "level": level,
                              "pos": nlp_engine.nlp(clean_text)[0].pos_, # Get POS from spaCy
-                             "definition": def_fetcher.get_definition(lemma) or f"Definition not found for {lemma}"
                          }
+                         
+                         if args.include_definitions:
+                             entry["definition"] = def_fetcher.get_definition(lemma) or f"Definition not found for {lemma}"
+                             
+                         glossary_entries[lemma] = entry
 
         print(f"Found {len(words_to_highlight)} words to highlight from levels {target_levels}.")
         

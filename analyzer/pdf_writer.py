@@ -36,7 +36,8 @@ class PDFWriter:
         story.append(Spacer(1, 12))
 
         for item in glossary_data:
-            text = f"<b>{item['word']}</b> (<i>{item.get('pos','?')}</i>, {item['level']}): {item['definition']}"
+            definition_html = f": {item['definition']}" if 'definition' in item else ""
+            text = f"<b>{item['word']}</b> (<i>{item.get('pos','?')}</i>, {item['level']}){definition_html}"
             story.append(Paragraph(text, styles['Normal']))
             story.append(Spacer(1, 6))
 
