@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - pdf-analyzer
+    networks:
+      - app-network
+
+  # English PDF Analyzer application
+  pdf-analyzer:
+    image: aaiiz/english-pdf-analyzer:latest
+    container_name: english-pdf-analyzer
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - app-network
+    volumes:
+      - pdf-uploads:/app/uploads
+      - pdf-outputs:/app/outputs
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pdf-uploads:
+  pdf-outputs:
