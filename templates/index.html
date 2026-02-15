@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Vocabulary Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF Vocabulary Analyzer</h1>
+            <p>Upload a PDF to highlight CEFR vocabulary and generate a glossary.</p>
+        </header>
+
+        <main>
+            {% if error %}
+            <div class="alert error">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if download_link %}
+            <div class="alert success">
+                <p>Analysis complete!</p>
+                <a href="{{ url_for('download_file', filename=download_link) }}" class="btn download-btn">Download Processed PDF</a>
+                <br><br>
+                <a href="{{ url_for('index') }}" class="link">Analyze another file</a>
+            </div>
+            {% else %}
+            <form method="post" enctype="multipart/form-data" class="analysis-form">
+                <div class="form-group">
+                    <label for="file-upload" class="custom-file-upload">
+                        Choose PDF File
+                    </label>
+                    <input id="file-upload" type="file" name="file" accept=".pdf" required>
+                    <span id="file-selected">No file chosen</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Select CEFR Levels:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="levels" value="A1" checked> A1</label>
+                        <label><input type="checkbox" name="levels" value="A2" checked> A2</label>
+                        <label><input type="checkbox" name="levels" value="B1" checked> B1</label>
+                        <label><input type="checkbox" name="levels" value="B2" checked> B2</label>
+                        <label><input type="checkbox" name="levels" value="C1" checked> C1</label>
+                        <label><input type="checkbox" name="levels" value="C2" checked> C2</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Options:</label>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="include_definitions"> 
+                            Include Definitions (Slower)
+                        </label>
+                        <label>
+                            <input type="checkbox" name="estimate"> 
+                            Estimate Levels for Unknown Words
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn submit-btn" id="analyze-btn">Analyze PDF</button>
+                <div id="loader" class="loader" style="display:none;">Processing...</div>
+            </form>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>English PDF Analyzer &copy; 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('file-upload').addEventListener('change', function() {
+            var fileName = this.files[0].name;
+            document.getElementById('file-selected').textContent = fileName;
+        });
+
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('analyze-btn').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

@@ -8,25 +8,7 @@ from analyzer.definitions import DefinitionFetcher
 
 import argparse
 
-def main():
-    parser = argparse.ArgumentParser(description="Analyze vocabulary in a PDF based on CEFR levels.")
-    parser.add_argument("input_pdf", help="Path to input PDF file")
-    parser.add_argument("output_pdf", help="Path to output PDF file")
-    parser.add_argument("--levels", nargs="+", 
-                        default=["A1", "A2", "B1", "B2", "C1", "C2"],
-                        choices=["A1", "A2", "B1", "B2", "C1", "C2"],
-                        help="CEFR levels to highlight and include (default: all)")
-    parser.add_argument("--include-definitions", action="store_true",
-                        help="Fetch and include definitions in the glossary")
-    parser.add_argument("--estimate", action="store_true",
-                        help="Enable frequency-based CEFR estimation for unknown words")
-    
-    args = parser.parse_args()
-    
-    input_pdf = args.input_pdf
-    output_pdf = args.output_pdf
-    target_levels = set([l.upper() for l in args.levels])
-    
+def analyze_pdf(input_pdf, output_pdf, target_levels, include_definitions, estimate):
     print(f"Processing {input_pdf}...")
     print(f"Target levels: {', '.join(sorted(target_levels))}")
     
@@ -69,7 +51,7 @@ def main():
                 lemma = nlp_engine.nlp(clean_text)[0].lemma_
                 
                 # Pass check_frequency based on flag
-                level = cefr_analyzer.get_level(lemma, estimate=args.estimate)
+                level = cefr_analyzer.get_level(lemma, estimate=estimate)
                 
                 # Check if level is identified AND it is in the target list
                 if level and level in target_levels:
@@ -97,7 +79,7 @@ def main():
                              "pos": nlp_engine.nlp(clean_text)[0].pos_, # Get POS from spaCy
                          }
                          
-                         if args.include_definitions:
+                         if include_definitions:
                              entry["definition"] = def_fetcher.get_definition(lemma) or f"Definition not found for {lemma}"
                              
                          glossary_entries[lemma] = entry
@@ -133,10 +115,32 @@ def main():
                 os.remove(p)
                 
         print("Done!")
+        return True
 
     finally:
         # Ensure we close the doc if something crashes, though PyMuPDF is robust
         pass
+
+def main():
+    parser = argparse.ArgumentParser(description="Analyze vocabulary in a PDF based on CEFR levels.")
+    parser.add_argument("input_pdf", help="Path to input PDF file")
+    parser.add_argument("output_pdf", help="Path to output PDF file")
+    parser.add_argument("--levels", nargs="+", 
+                        default=["A1", "A2", "B1", "B2", "C1", "C2"],
+                        choices=["A1", "A2", "B1", "B2", "C1", "C2"],
+                        help="CEFR levels to highlight and include (default: all)")
+    parser.add_argument("--include-definitions", action="store_true",
+                        help="Fetch and include definitions in the glossary")
+    parser.add_argument("--estimate", action="store_true",
+                        help="Enable frequency-based CEFR estimation for unknown words")
+    
+    args = parser.parse_args()
+    
+    input_pdf = args.input_pdf
+    output_pdf = args.output_pdf
+    target_levels = set([l.upper() for l in args.levels])
+    
+    analyze_pdf(input_pdf, output_pdf, target_levels, args.include_definitions, args.estimate)
 
 if __name__ == "__main__":
     main()
