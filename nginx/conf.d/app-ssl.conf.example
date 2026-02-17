@@ -49,6 +49,6 @@ server {
         send_timeout 300;
         
         # Increase max body size for PDF uploads
-        client_max_body_size 50M;
+        client_max_body_size 20M;
     }
 }

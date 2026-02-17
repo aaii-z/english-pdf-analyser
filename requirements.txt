@@ -5,3 +5,4 @@ wordfreq
 requests
 reportlab
 matplotlib
+Flask-Limiter
