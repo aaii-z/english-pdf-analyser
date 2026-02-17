@@ -1,30 +1,74 @@
 :root {
+    /* Default Dark Theme Variables */
+    --bg-color: #121212;
+    --container-bg: #1e1e1e;
+    --text-color: #e0e0e0;
     --primary-color: #4a90e2;
-    --secondary-color: #f5f5f5;
-    --text-color: #333;
+    --secondary-text: #b0b0b0;
+    --border-color: #333;
     --border-radius: 8px;
+
+    /* Form Elements */
+    --input-bg: #2c2c2c;
+    --input-border: #444;
+    --input-text: #fff;
+
+    /* Alerts */
+    --error-bg: #cf6679;
+    --error-text: #fff;
+    --success-bg: #03dac6;
+    --success-text: #000;
+
+    /* Interactive */
+    --hover-bg: #333;
+}
+
+[data-theme="light"] {
+    --bg-color: #f0f2f5;
+    --container-bg: #ffffff;
+    --text-color: #333333;
+    --primary-color: #4a90e2;
+    --secondary-text: #666666;
+    --border-color: #ccc;
+
+    /* Form Elements */
+    --input-bg: #ffffff;
+    --input-border: #ccc;
+    --input-text: #333;
+
+    /* Alerts */
+    --error-bg: #f8d7da;
+    --error-text: #721c24;
+    --success-bg: #d4edda;
+    --success-text: #155724;
+
+    /* Interactive */
+    --hover-bg: #f5f5f5;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background-color: #f0f2f5;
+    background-color: var(--bg-color);
     margin: 0;
     padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .container {
-    background-color: white;
+    background-color: var(--container-bg);
     padding: 2rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     width: 100%;
     max-width: 600px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    position: relative;
 }
 
 header {
@@ -45,6 +89,7 @@ label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
+    color: var(--text-color);
 }
 
 /* File Upload */
@@ -53,7 +98,7 @@ input[type="file"] {
 }
 
 .custom-file-upload {
-    border: 2px dashed #ccc;
+    border: 2px dashed var(--input-border);
     display: inline-block;
     padding: 12px 24px;
     cursor: pointer;
@@ -61,11 +106,14 @@ input[type="file"] {
     width: 100%;
     box-sizing: border-box;
     text-align: center;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, background-color 0.3s;
+    background-color: var(--input-bg);
+    color: var(--text-color);
 }
 
 .custom-file-upload:hover {
     border-color: var(--primary-color);
+    background-color: var(--hover-bg);
 }
 
 #file-selected {
@@ -73,7 +121,7 @@ input[type="file"] {
     margin-top: 0.5rem;
     font-style: italic;
     text-align: center;
-    color: #666;
+    color: var(--secondary-text);
 }
 
 /* Checkboxes */
@@ -100,10 +148,14 @@ input[type="file"] {
     cursor: pointer;
     font-size: 1rem;
     text-decoration: none;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.1s;
     width: 100%;
     box-sizing: border-box;
     text-align: center;
+}
+
+.btn:active {
+    transform: scale(0.98);
 }
 
 .submit-btn {
@@ -112,7 +164,7 @@ input[type="file"] {
 }
 
 .submit-btn:hover {
-    background-color: #357abd;
+    filter: brightness(1.1);
 }
 
 .download-btn {
@@ -133,13 +185,13 @@ input[type="file"] {
 }
 
 .error {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: var(--error-bg);
+    color: var(--error-text);
 }
 
 .success {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: var(--success-bg);
+    color: var(--success-text);
 }
 
 .link {
@@ -165,5 +217,25 @@ footer {
     text-align: center;
     margin-top: 2rem;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--secondary-text);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    width: auto;
+}
+
+.theme-toggle:hover {
+    background-color: var(--hover-bg);
 }

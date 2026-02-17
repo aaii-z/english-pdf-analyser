@@ -11,6 +11,9 @@
 <body>
     <div class="container">
         <header>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
+                <span class="icon">☀️</span>
+            </button>
             <h1>English PDF Analyzer</h1>
             <p>Upload a PDF to highlight CEFR vocabulary and generate a glossary.</p>
         </header>
@@ -84,9 +87,43 @@
         });
 
         document.querySelector('form').addEventListener('submit', function () {
-            document.getElementById('analyze-btn').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
+            // Only hide button/show loader if valid
+            if (this.checkValidity()) {
+                document.getElementById('analyze-btn').style.display = 'none';
+                document.getElementById('loader').style.display = 'block';
+            }
         });
+
+        // Theme Toggle Logic
+        const toggleBtn = document.getElementById('theme-toggle');
+        const iconSpan = toggleBtn.querySelector('.icon');
+        const htmlElement = document.documentElement;
+
+        // Check saved preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            htmlElement.setAttribute('data-theme', savedTheme);
+            updateIcon(savedTheme);
+        } else {
+            // Default is dark (no attribute needed as per CSS, or we can explicit set)
+            // But if user prefers light scheme in OS, we might want to respect that?
+            // For now, let's stick to the request: default dark, toggle to light.
+            // Our CSS :root is dark by default.
+            updateIcon('dark');
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        });
+
+        function updateIcon(theme) {
+            iconSpan.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
     </script>
 </body>
 
