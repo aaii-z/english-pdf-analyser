@@ -42,3 +42,9 @@ traefik/acme.json
 # Environment
 .env
 .env.local
+
+# Terraform
+terraform/
+*.tfstate
+*.tfstate.backup
+.terraform/
