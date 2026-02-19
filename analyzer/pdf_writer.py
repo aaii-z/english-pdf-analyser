@@ -4,6 +4,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as ReportLabImage
 from reportlab.lib.styles import getSampleStyleSheet
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 

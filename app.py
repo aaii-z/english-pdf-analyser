@@ -70,9 +70,22 @@ def index():
             # Check page count limit
             with pymupdf.open(input_path) as doc:
                 page_count = doc.page_count
+            warning = None
             if page_count > 100:
+                trial_pages = 15
+                warning = (
+                    f"Your PDF has {page_count} pages. The maximum is 100 pages. "
+                    f"To show you what the results look like, we analyzed only the first {trial_pages} pages."
+                )
+                # Trim the uploaded file to trial_pages so the download only contains those pages
+                trimmed_path = os.path.join(app.config['UPLOAD_FOLDER'], f"trimmed_{filename}")
+                with pymupdf.open(input_path) as full_doc:
+                    trimmed_doc = pymupdf.open()
+                    trimmed_doc.insert_pdf(full_doc, to_page=trial_pages - 1)
+                    trimmed_doc.save(trimmed_path)
+                    trimmed_doc.close()
                 os.remove(input_path)
-                return render_template('index.html', error=f"PDF has {page_count} pages. Maximum allowed is 100 pages.")
+                input_path = trimmed_path
 
             # Get options
             selected_levels = request.form.getlist('levels')
@@ -93,15 +106,19 @@ def index():
                 levels_set = set([l.upper() for l in selected_levels])
                 
                 success = analyze_pdf(
-                    input_path, 
-                    output_path, 
-                    levels_set, 
-                    include_definitions, 
-                    estimate
+                    input_path,
+                    output_path,
+                    levels_set,
+                    include_definitions,
+                    estimate,
                 )
-                
+
                 if success:
-                    return render_template('index.html', download_link=output_filename)
+                    return render_template(
+                        'index.html',
+                        download_link=output_filename,
+                        warning=warning,
+                    )
                 else:
                     return render_template('index.html', error="Analysis failed.")
                     

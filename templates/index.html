@@ -26,6 +26,11 @@
             {% endif %}
 
             {% if download_link %}
+            {% if warning %}
+            <div class="alert warning">
+                {{ warning }}
+            </div>
+            {% endif %}
             <div class="alert success">
                 <p>Analysis complete!</p>
                 <a href="{{ url_for('download_file', filename=download_link) }}" class="btn download-btn">Download

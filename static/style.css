@@ -194,6 +194,12 @@ input[type="file"] {
     color: var(--success-text);
 }
 
+.warning {
+    background-color: #7a5c00;
+    color: #ffe680;
+    border: 1px solid #b38600;
+}
+
 .link {
     display: block;
     text-align: center;

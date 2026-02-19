@@ -8,7 +8,7 @@ from analyzer.definitions import DefinitionFetcher
 
 import argparse
 
-def analyze_pdf(input_pdf, output_pdf, target_levels, include_definitions, estimate):
+def analyze_pdf(input_pdf, output_pdf, target_levels, include_definitions, estimate, max_pages=None):
     print(f"Processing {input_pdf}...")
     print(f"Target levels: {', '.join(sorted(target_levels))}")
     
@@ -25,8 +25,11 @@ def analyze_pdf(input_pdf, output_pdf, target_levels, include_definitions, estim
     level_counts = {}
 
     try:
-        # Process each page
-        for page_num, page in enumerate(extractor.get_document()):
+        # Process each page (optionally limited to max_pages)
+        pages = enumerate(extractor.get_document())
+        for page_num, page in pages:
+            if max_pages is not None and page_num >= max_pages:
+                break
             # Get words with coordinates
             pdf_words = page.get_text("words") 
             # pdf_words structure: (x0, y0, x1, y1, "word", block_no, line_no, word_no)
