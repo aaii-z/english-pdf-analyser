@@ -6,3 +6,4 @@ requests
 reportlab
 matplotlib
 Flask-Limiter
+nltk
