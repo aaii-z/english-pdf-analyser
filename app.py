@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, send_file, redirect, url_for
 from werkzeug.utils import secure_filename
 from main import analyze_pdf
 import time
+import pymupdf
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -65,7 +66,14 @@ def index():
             filename = secure_filename(file.filename)
             input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(input_path)
-            
+
+            # Check page count limit
+            with pymupdf.open(input_path) as doc:
+                page_count = doc.page_count
+            if page_count > 100:
+                os.remove(input_path)
+                return render_template('index.html', error=f"PDF has {page_count} pages. Maximum allowed is 100 pages.")
+
             # Get options
             selected_levels = request.form.getlist('levels')
             if not selected_levels:
